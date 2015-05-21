@@ -1,0 +1,21 @@
+---
+- hosts: localhost
+  gather_facts: no
+
+  vars:
+    version: 1
+    application_name: DemoApplication
+    deployment_group: DemoFleet
+    artifact: todomvc.zip
+    key: /deployment/todomvc.zip
+    bucket: docker-520-deploy-sscoble
+
+  tasks:
+  - name: zip up our frontend
+    shell: "cd frontend && zip -r ../{{ artifact }} . && cd .."
+
+  - name: upload revision
+    shell: "aws s3 cp {{ artifact }} s3://{{ bucket }}{{ key }}"
+    
+  - name: deploy new revision
+    shell: "aws deploy create-deployment --application-name {{ application_name }} --deployment-group-name {{ deployment_group }} --s3-location bundleType=zip,version={{ version }},bucket={{ bucket }},key={{ key }} --region us-east-1"
